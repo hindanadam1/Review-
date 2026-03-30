@@ -1,0 +1,29 @@
+
+/* Style global pour Revieweo - Noir & Rouge */
+body {
+	background: #111;
+	color: #fff;
+	font-family: 'Segoe UI', Arial, sans-serif;
+	margin: 0;
+	min-height: 100vh;
+}
+a {
+	color: #ff2222;
+	text-decoration: none;
+	transition: color 0.2s;
+}
+a:hover {
+	color: #fff;
+	text-shadow: 0 0 8px #ff2222;
+}
+input, button, textarea, select {
+	font-family: inherit;
+}
+::-webkit-scrollbar {
+	width: 8px;
+	background: #222;
+}
+::-webkit-scrollbar-thumb {
+	background: #900;
+	border-radius: 8px;
+}
