@@ -79,6 +79,39 @@ body {
   object-fit: cover;
 }
 
+.login-box {
+  position: absolute;
+  top: 60px;
+  right: 50px;
+  background: #222;
+  padding: 15px;
+  border-radius: 10px;
+  display: none;
+}
+
+.login-box.active {
+  display: block;
+}
+
+.login-btn, .register-btn {
+  display: block;
+  width: 100%;
+  margin: 5px 0;
+  padding: 8px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  color: white;
+}
+
+.login-btn {
+  background-color: #4dbf00;
+}
+
+.register-btn {
+  background-color: #555;
+}
+
 .container {
   background-color: #151515;
   min-height: calc(100vh - 50px);
@@ -250,20 +283,25 @@ body {
         </div>
         <div class="menu-container">
           <ul class="menu-list">
-            <li class="menu-list-item active">Home</li>
-            <li class="menu-list-item">Movies</li>
-            <li class="menu-list-item">Series</li>
-            <li class="menu-list-item">Popular</li>
-            <li class="menu-list-item">Trends</li>
+            <li class="menu-list-item active">Cátegorie</li>
+            <li class="menu-list-item">Dashboard</li>
+            <li class="menu-list-item">Write review </li>
+
           </ul>
         </div>
         <div class="profile-container">
-          <img class="profile-picture" src="img/profile.jpg" alt="" />
+          <img class="profile-picture" src="" alt="" />
           <div class="profile-text-container">
             <span class="profile-text">Profile</span>
             <i class="fas fa-caret-down"></i>
           </div>
         </div>
+        
+        <div class="login-box" id="loginBox">
+          <button class="login-btn" onclick="window.location.href='login.php'">Login</button>
+          <button class="register-btn" onclick="window.location.href='register.php'">Register</button>
+        </div>
+
       </div>
     </div>
 
@@ -485,6 +523,10 @@ body {
 const arrows = document.querySelectorAll(".arrow");
 const movieLists = document.querySelectorAll(".movie-list");
 
+const profileText = document.querySelector(".profile-text");
+const loginBox = document.getElementById("loginBox");
+
+
 arrows.forEach((arrow, i) => {
   const itemNumber = movieLists[i].querySelectorAll("img").length;
   let clickCounter = 0;
@@ -500,6 +542,10 @@ arrows.forEach((arrow, i) => {
   });
 
   console.log(Math.floor(window.innerWidth / 270));
+});
+
+profileText.addEventListener("click", () => {
+  loginBox.classList.toggle("active");
 });
 
 
