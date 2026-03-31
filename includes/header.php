@@ -50,11 +50,19 @@ body {
 .menu-list-item {
   margin-right: 30px;
   cursor: pointer;
-  
 }
 
 .category-menu {
   position: relative;
+}
+
+.category-toggle {
+  background: transparent;
+  border: none;
+  color: white;
+  font: inherit;
+  cursor: pointer;
+  padding: 0;
 }
 
 .category-box {
@@ -93,8 +101,8 @@ body {
 
 .menu-list-item.active {
   font-weight: bold;
-
 }
+
 .profile-container {
   flex: 2;
   display: flex;
@@ -129,7 +137,8 @@ body {
   display: block;
 }
 
-.login-btn, .register-btn {
+.login-btn,
+.register-btn {
   display: block;
   width: 100%;
   margin: 5px 0;
@@ -147,75 +156,90 @@ body {
 .register-btn {
   background-color: #555;
 }
-
 </style>
 
 <!-- navbar -->
 <div class="navbar">
-      <div class="navbar-container">
-        <div class="logo-container">
-          <h1 class="logo">logo</h1>
-        </div>
-        <div class="menu-container">
-          <ul class="menu-list">
-            <li class="menu-list-item category-menu">
-                Cátegorie
-                <div class="category-box" id="categoryBox">
-                    <ul>
-                    <li><a href="/Review-/pages/index.php#drama">Drama</a></li>
-                    <li><a href="/Review-/pages/index.php#comedy">Comedy</a></li>
-                    <li><a href="/Review-/pages/index.php#action">Action</a></li>
-                    <li><a href="/Review-/pages/index.php#horror">Horror</a></li>
-                    <li><a href="/Review-/pages/index.php#sci-fi">Sci-fi</a></li>
-                    <li><a href="/Review-/pages/index.php#western">Western</a></li>
-                    <li><a href="/Review-/pages/index.php#romance">Romance</a></li>
-                    <li><a href="/Review-/pages/index.php#thriller">Thriller</a></li>
-                    <li><a href="/Review-/pages/index.php#fantasy">Fantasy</a></li>
-                    <li><a href="/Review-/pages/index.php#apocalypse">Apocalypse</a></li>
-                    <li><a href="/Review-/pages/index.php#martial-art">Martial Arts</a></li>
-                    <li><a href="/Review-/pages/index.php#sports">Sports</a></li>
-                    </ul>
-                </div>
-            </li>
-            <li class="menu-list-item">
-                <a href="/Review-/pages/dashboard.php">Dashboard</a>
-            </li>            
-            <li class="menu-list-item">Write review </li>
-
-          </ul>
-        </div>
-        <div class="profile-container">
-          <img class="profile-picture" src="" alt="" />
-          <div class="profile-text-container">
-            <span class="profile-text">Profile</span>
-            <i class="fas fa-caret-down"></i>
+  <div class="navbar-container">
+    <div class="logo-container">
+      <h1 class="logo">logo</h1>
+    </div>
+    <div class="menu-container">
+      <ul class="menu-list">
+        <li class="menu-list-item category-menu">
+          <button type="button" class="category-toggle">Categorie</button>
+          <div class="category-box" id="categoryBox">
+            <ul>
+              <li><a href="/revieweo/pages/index.php#drama">Drama</a></li>
+              <li><a href="/revieweo/pages/index.php#comedy">Comedy</a></li>
+              <li><a href="/revieweo/pages/index.php#action">Action</a></li>
+              <li><a href="/revieweo/pages/index.php#horror">Horror</a></li>
+              <li><a href="/revieweo/pages/index.php#sci-fi">Sci-fi</a></li>
+              <li><a href="/revieweo/pages/index.php#western">Western</a></li>
+              <li><a href="/revieweo/pages/index.php#romance">Romance</a></li>
+              <li><a href="/revieweo/pages/index.php#thriller">Thriller</a></li>
+              <li><a href="/revieweo/pages/index.php#fantacy">Fantasy</a></li>
+              <li><a href="/revieweo/pages/index.php#apocalypse">Apocalypse</a></li>
+              <li><a href="/revieweo/pages/index.php#martial-arts">Martial Arts</a></li>
+              <li><a href="/revieweo/pages/index.php#sports">Sports</a></li>
+            </ul>
           </div>
-        </div>
-        
-        <div class="login-box" id="loginBox">
-          <button class="login-btn" onclick="window.location.href='/Review-/Auth/login.php'">Login</button>
-          <button class="register-btn" onclick="window.location.href='/Review-/Auth/register.php'">Register</button>
-        </div>
-
+        </li>
+        <li class="menu-list-item">
+          <a href="/revieweo/pages/dashboard.php">Dashboard</a>
+        </li>
+        <li class="menu-list-item">
+          <a href="/revieweo/pages/create_review.php">Write review</a>
+        </li>
+      </ul>
+    </div>
+    <div class="profile-container">
+      <img class="profile-picture" src="" alt="" />
+      <div class="profile-text-container">
+        <span class="profile-text">Profile</span>
+        <i class="fas fa-caret-down"></i>
       </div>
     </div>
 
+    <div class="login-box" id="loginBox">
+      <button class="login-btn" onclick="window.location.href='/revieweo/auth/login.php'">Login</button>
+      <button class="register-btn" onclick="window.location.href='/revieweo/auth/register.php'">Register</button>
+    </div>
+  </div>
+</div>
 
-    <script>
-
-
+<script>
 const profileTextContainer = document.querySelector(".profile-text-container");
 const loginBox = document.getElementById("loginBox");
 
 const categoryMenu = document.querySelector(".category-menu");
 const categoryBox = document.getElementById("categoryBox");
+const categoryToggle = document.querySelector(".category-toggle");
+const categoryLinks = document.querySelectorAll(".category-box a");
 
-categoryMenu.addEventListener("click", () => {
+categoryToggle.addEventListener("click", (event) => {
+  event.stopPropagation();
   categoryBox.classList.toggle("active");
 });
 
-profileTextContainer.addEventListener("click", () => {
+profileTextContainer.addEventListener("click", (event) => {
+  event.stopPropagation();
   loginBox.classList.toggle("active");
 });
 
-    </script>
+categoryLinks.forEach((link) => {
+  link.addEventListener("click", () => {
+    categoryBox.classList.remove("active");
+  });
+});
+
+document.addEventListener("click", (event) => {
+  if (!categoryMenu.contains(event.target)) {
+    categoryBox.classList.remove("active");
+  }
+
+  if (!profileTextContainer.contains(event.target) && !loginBox.contains(event.target)) {
+    loginBox.classList.remove("active");
+  }
+});
+</script>
