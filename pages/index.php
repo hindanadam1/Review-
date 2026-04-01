@@ -25,12 +25,8 @@ body {
   color: white;
 }
 
-.content-container {
-  margin-left: 50px;
-}
-
 .featured-content {
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0), #151515),
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0), black),
               url('img/f-2.jpg');
   height: 50vh;
   padding: 50px;
@@ -174,30 +170,25 @@ body {
     transform: translateX(-20px);
 }
 
-@media only screen and (max-width: 940px){
-    .menu-container{
-        display: none;
-    }
-}
     </style>
 </head>
 <body>
-    
     <div class="container">
       <!-- main movie -->
-      <div class="content-container">
-        <div class="featured-content">
-          <img class="featured-title" src="img/f-t-1.png" alt="" />
-          <p class="featured-desc">
-            ttttttttttttttttttttttttttttttttttttttt
-            ttttttttttttttttttttttttttttttttttttttttttttttt
-            ttttttttttttttttttttttttttttttttttttttttttttttttttttttt
-            ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt
-            tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt
-            ttttttttttttttttttttttttttt
-          </p>
-          <button class="featured-button">WATCH</button>
-        </div>
+      <div class="featured-content">
+        <img class="featured-title" src="img/f-t-1.png" alt="" />
+        <p class="featured-desc">
+          ttttttttttttttttttttttttttttttttttttttt
+          ttttttttttttttttttttttttttttttttttttttttttttttt
+          ttttttttttttttttttttttttttttttttttttttttttttttttttttttt
+          ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt
+          tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt
+          ttttttttttttttttttttttttttt
+        </p>
+        <button class="featured-button">WATCH</button>
+      </div>
+      <!-- lists movies -->
+      <div class="movie-lists-containers">
         <!-- list movie 1 -->
         <div class="movie-list-container">
           <h1 class="movie-list-title" id="drama">DRAMA</h1>
@@ -994,7 +985,13 @@ body {
                 </div>
             </div>
         </div>
+      </div>
     </div>
+
+    <?php
+      include '../includes/footer.php'; 
+    ?>
+
     <script>
 const arrows = document.querySelectorAll(".arrow");
 const movieLists = document.querySelectorAll(".movie-list");
