@@ -31,7 +31,7 @@ body {
 
 .featured-content {
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0), #151515),
-              url('img/6.jpg');
+              url('img/f-2.jpg');
   height: 50vh;
   padding: 50px;
 }
