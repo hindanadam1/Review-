@@ -1,31 +1,48 @@
 <?php
+session_start();
 require_once '../config/db.php';
-$message = "";
 
-// Récupérer l'ID de la critique à éditer
-if (!isset($_GET['id'])) {
+if (!isset($_SESSION['user']['id'])) {
+    header('Location: ../auth/login.php');
+    exit();
+}
+
+$message = "";
+$userId = (int) $_SESSION['user']['id'];
+$isAdmin = isset($_SESSION['user']['role']) && (int) $_SESSION['user']['role'] === 2;
+$id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+
+if ($id <= 0) {
     die('ID manquant');
 }
-$id = intval($_GET['id']);
 
-// Charger la critique existante
-$stmt = $pdo->prepare("SELECT * FROM critique WHERE id = ?");
-$stmt->execute([$id]);
-$critique = $stmt->fetch();
+$selectQuery = $isAdmin
+    ? "SELECT * FROM critique WHERE id = ?"
+    : "SELECT * FROM critique WHERE id = ? AND id_user = ?";
+$stmt = $pdo->prepare($selectQuery);
+$stmt->execute($isAdmin ? [$id] : [$id, $userId]);
+$critique = $stmt->fetch(PDO::FETCH_ASSOC);
+
 if (!$critique) {
     die('Critique introuvable');
 }
 
-// Traitement du formulaire
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $titre = trim($_POST['titre']);
-    $contenu = trim($_POST['contenu']);
-    $note = intval($_POST['note']);
-    if (!empty($titre) && !empty($contenu) && $note >= 0 && $note <= 5) {
-        $stmt = $pdo->prepare("UPDATE critique SET titre = ?, contenu = ?, note = ? WHERE id = ?");
-        if ($stmt->execute([$titre, $contenu, $note, $id])) {
-            $message = "Critique modifiée !";
-            // Recharger les données modifiées
+    $titre = trim($_POST['titre'] ?? '');
+    $contenu = trim($_POST['contenu'] ?? '');
+    $note = (int) ($_POST['note'] ?? 0);
+
+    if ($titre !== '' && $contenu !== '' && $note >= 0 && $note <= 5) {
+        $updateQuery = $isAdmin
+            ? "UPDATE critique SET titre = ?, contenu = ?, note = ? WHERE id = ?"
+            : "UPDATE critique SET titre = ?, contenu = ?, note = ? WHERE id = ? AND id_user = ?";
+        $stmt = $pdo->prepare($updateQuery);
+        $updated = $isAdmin
+            ? $stmt->execute([$titre, $contenu, $note, $id])
+            : $stmt->execute([$titre, $contenu, $note, $id, $userId]);
+
+        if ($updated) {
+            $message = "Critique modifiee !";
             $critique['titre'] = $titre;
             $critique['contenu'] = $contenu;
             $critique['note'] = $note;
@@ -49,13 +66,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="animated-glow"></div>
         <div class="register-content">
             <div class="register-title">Modifier la critique</div>
-            <?php if ($message) echo '<div class="success-msg">' . $message . '</div>'; ?>
+            <?php if ($message) echo '<div class="success-msg">' . htmlspecialchars($message, ENT_QUOTES, 'UTF-8') . '</div>'; ?>
             <form class="register-form" method="POST">
-                <input type="text" name="titre" value="<?= isset($critique) ? htmlspecialchars($critique['titre']) : '' ?>" required>
-                <textarea name="contenu" required><?= isset($critique) ? htmlspecialchars($critique['contenu']) : '' ?></textarea>
-                <input type="number" name="note" min="0" max="5" value="<?= isset($critique) ? $critique['note'] : '' ?>" required>
+                <input type="text" name="titre" value="<?= htmlspecialchars($critique['titre'], ENT_QUOTES, 'UTF-8') ?>" required>
+                <textarea name="contenu" required><?= htmlspecialchars($critique['contenu'], ENT_QUOTES, 'UTF-8') ?></textarea>
+                <input type="number" name="note" min="0" max="5" value="<?= (int) $critique['note'] ?>" required>
                 <button type="submit">Modifier</button>
             </form>
+            <?php if ($isAdmin): ?>
+                <div class="auth-footer-link">
+                    <a href="/revieweo/pages/admin_reviews.php">Retour a Admin Reviews</a>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 </body>

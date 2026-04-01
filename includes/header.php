@@ -1,3 +1,12 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+$currentUser = $_SESSION['user'] ?? null;
+$isLoggedIn = isset($currentUser['id']);
+$profileLabel = $isLoggedIn ? htmlspecialchars($currentUser['pseudo'], ENT_QUOTES, 'UTF-8') : 'Profile';
+?>
 <style>
 * {
   margin: 0;
@@ -114,6 +123,9 @@ body {
 .profile-text-container {
   margin: 0 20px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .profile-picture {
@@ -131,14 +143,17 @@ body {
   padding: 15px;
   border-radius: 10px;
   display: none;
+  min-width: 180px;
 }
 
 .login-box.active {
   display: block;
 }
 
+.login-box-link,
 .login-btn,
-.register-btn {
+.register-btn,
+.logout-btn {
   display: block;
   width: 100%;
   margin: 5px 0;
@@ -147,18 +162,25 @@ body {
   border-radius: 5px;
   cursor: pointer;
   color: white;
+  text-align: center;
+  text-decoration: none;
+  box-sizing: border-box;
 }
 
-.login-btn {
+.login-btn,
+.login-box-link.dashboard-link {
   background-color: #4dbf00;
 }
 
 .register-btn {
   background-color: #555;
 }
+
+.logout-btn {
+  background-color: #9b1c1c;
+}
 </style>
 
-<!-- navbar -->
 <div class="navbar">
   <div class="navbar-container">
     <div class="logo-container">
@@ -194,16 +216,21 @@ body {
       </ul>
     </div>
     <div class="profile-container">
-      <img class="profile-picture" src="" alt="" />
+      <img class="profile-picture" src="" alt="Photo de profil" />
       <div class="profile-text-container">
-        <span class="profile-text">Profile</span>
+        <span class="profile-text"><?= $profileLabel ?></span>
         <i class="fas fa-caret-down"></i>
       </div>
     </div>
 
     <div class="login-box" id="loginBox">
-      <button class="login-btn" onclick="window.location.href='/revieweo/auth/login.php'">Login</button>
-      <button class="register-btn" onclick="window.location.href='/revieweo/auth/register.php'">Register</button>
+      <?php if ($isLoggedIn): ?>
+        <a class="login-box-link dashboard-link" href="/revieweo/pages/dashboard.php">Mon dashboard</a>
+        <a class="logout-btn" href="/revieweo/auth/logout.php">Deconnexion</a>
+      <?php else: ?>
+        <button class="login-btn" type="button" onclick="window.location.href='/revieweo/auth/login.php'">Login</button>
+        <button class="register-btn" type="button" onclick="window.location.href='/revieweo/auth/register.php'">Register</button>
+      <?php endif; ?>
     </div>
   </div>
 </div>
@@ -211,21 +238,24 @@ body {
 <script>
 const profileTextContainer = document.querySelector(".profile-text-container");
 const loginBox = document.getElementById("loginBox");
-
 const categoryMenu = document.querySelector(".category-menu");
 const categoryBox = document.getElementById("categoryBox");
 const categoryToggle = document.querySelector(".category-toggle");
 const categoryLinks = document.querySelectorAll(".category-box a");
 
-categoryToggle.addEventListener("click", (event) => {
-  event.stopPropagation();
-  categoryBox.classList.toggle("active");
-});
+if (categoryToggle && categoryBox) {
+  categoryToggle.addEventListener("click", (event) => {
+    event.stopPropagation();
+    categoryBox.classList.toggle("active");
+  });
+}
 
-profileTextContainer.addEventListener("click", (event) => {
-  event.stopPropagation();
-  loginBox.classList.toggle("active");
-});
+if (profileTextContainer && loginBox) {
+  profileTextContainer.addEventListener("click", (event) => {
+    event.stopPropagation();
+    loginBox.classList.toggle("active");
+  });
+}
 
 categoryLinks.forEach((link) => {
   link.addEventListener("click", () => {
@@ -234,11 +264,11 @@ categoryLinks.forEach((link) => {
 });
 
 document.addEventListener("click", (event) => {
-  if (!categoryMenu.contains(event.target)) {
+  if (categoryMenu && !categoryMenu.contains(event.target)) {
     categoryBox.classList.remove("active");
   }
 
-  if (!profileTextContainer.contains(event.target) && !loginBox.contains(event.target)) {
+  if (profileTextContainer && loginBox && !profileTextContainer.contains(event.target) && !loginBox.contains(event.target)) {
     loginBox.classList.remove("active");
   }
 });

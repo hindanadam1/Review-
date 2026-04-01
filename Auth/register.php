@@ -1,16 +1,30 @@
-
 <?php
 include '../config/db.php';
+
 $message = '';
-if ($_POST) {
-    $pseudo = $_POST['pseudo'];
-    $email = $_POST['email'];
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+$error = '';
 
-    $stmt = $pdo->prepare("INSERT INTO user (pseudo, email, password, role) VALUES (?, ?, ?, 1)");
-    $stmt->execute([$pseudo, $email, $password]);
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $pseudo = trim($_POST['pseudo'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $plainPassword = $_POST['password'] ?? '';
 
-    $message = "<div class='success-msg'>Compte créé ! <a href='login.php'>Se connecter</a></div>";
+    if ($pseudo === '' || $email === '' || $plainPassword === '') {
+        $error = "<div class='auth-error'>Veuillez remplir tous les champs.</div>";
+    } else {
+        $checkStmt = $pdo->prepare("SELECT id FROM user WHERE LOWER(email) = LOWER(?) OR pseudo = ? LIMIT 1");
+        $checkStmt->execute([$email, $pseudo]);
+        $existingUser = $checkStmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($existingUser) {
+            $error = "<div class='auth-error'>Un compte avec cet email ou ce pseudo existe deja.</div>";
+        } else {
+            $password = password_hash($plainPassword, PASSWORD_DEFAULT);
+            $stmt = $pdo->prepare("INSERT INTO user (pseudo, email, password, role) VALUES (?, ?, ?, 1)");
+            $stmt->execute([$pseudo, $email, $password]);
+            $message = "<div class='success-msg'>Compte cree ! <a href='login.php'>Se connecter</a></div>";
+        }
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -25,7 +39,8 @@ if ($_POST) {
     <div class="auth-container">
         <div class="auth-animated-glow"></div>
         <div class="auth-content">
-            <div class="auth-title">Créer un compte</div>
+            <div class="auth-title">Creer un compte</div>
+            <?php if ($error) echo $error; ?>
             <?php if ($message) echo $message; ?>
             <form class="auth-form" method="POST" autocomplete="off">
                 <input name="pseudo" placeholder="Pseudo" required maxlength="32">
@@ -34,7 +49,7 @@ if ($_POST) {
                 <button type="submit">S'inscrire</button>
             </form>
             <div class="auth-footer-link">
-                <a href="login.php">Déjà un compte ? Se connecter</a>
+                <a href="login.php">Deja un compte ? Se connecter</a>
             </div>
         </div>
     </div>
