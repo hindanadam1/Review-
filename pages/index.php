@@ -42,16 +42,6 @@ body {
   margin: 30px 0;
 }
 
-.featured-button {
-  background-color: #4dbf00;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 10px;
-  border: none;
-  outline: none;
-  font-weight: bold;
-}
-
 .movie-list-container {
   padding: 0 20px;
 }
@@ -72,6 +62,7 @@ body {
 .movie-list-item {
   margin-right: 30px;
   position: relative;
+  cursor: pointer;
 }
 
 .movie-list-item:hover .movie-list-item-img {
@@ -120,7 +111,7 @@ body {
 
 .movie-list-item-button {
   padding: 10px;
-  background-color: #4dbf00;
+  background: linear-gradient(135deg, #e53935 0%, #a30f0b 100%);
   color: white;
   border-radius: 10px;
   outline: none;
@@ -131,6 +122,10 @@ body {
   left: 50px;
   opacity: 0;
   transition: 1s all ease-in-out;
+}
+
+.movie-list-item-button:hover {
+  background: linear-gradient(135deg, #c3110c 0%, #7d0906 100%);
 }
 
 .arrow {
@@ -185,7 +180,6 @@ body {
           tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt
           ttttttttttttttttttttttttttt
         </p>
-        <button class="featured-button">WATCH</button>
       </div>
       <!-- lists movies -->
       <div class="movie-lists-containers">
@@ -995,6 +989,30 @@ body {
     <script>
 const arrows = document.querySelectorAll(".arrow");
 const movieLists = document.querySelectorAll(".movie-list");
+const reviewButtons = document.querySelectorAll(".movie-list-item-button");
+const movieItems = document.querySelectorAll(".movie-list-item");
+const redirectToReview = (movieTitle) => {
+  const title = (movieTitle || "").trim();
+  if (!title) return;
+  window.location.href = `/revieweo/pages/create_review.php?title=${encodeURIComponent(title)}`;
+};
+
+reviewButtons.forEach((button) => {
+  button.textContent = "Add review";
+  button.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const movieItem = button.closest(".movie-list-item");
+    const titleElement = movieItem ? movieItem.querySelector(".movie-list-item-title") : null;
+    redirectToReview(titleElement ? titleElement.textContent : "");
+  });
+});
+
+movieItems.forEach((item) => {
+  item.addEventListener("click", () => {
+    const titleElement = item.querySelector(".movie-list-item-title");
+    redirectToReview(titleElement ? titleElement.textContent : "");
+  });
+});
 
 arrows.forEach((arrow, i) => {
   const itemNumber = movieLists[i].querySelectorAll("img").length;

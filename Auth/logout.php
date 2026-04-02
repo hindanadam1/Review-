@@ -1,6 +1,6 @@
 <?php
 session_start();
-session_destroy();
+require_once '../config/db.php';
 
-header("Location: login.php");
-exit();
+$authService->logout('login.php');
+

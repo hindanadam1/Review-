@@ -2,35 +2,15 @@
 session_start();
 require_once '../config/db.php';
 
-if (!isset($_SESSION['user']['id'])) {
-    header('Location: ../auth/login.php');
-    exit();
-}
+$authService->requireLogin('../auth/login.php');
 
-$userId = (int) $_SESSION['user']['id'];
-$pseudo = $_SESSION['user']['pseudo'] ?? 'Visiteur';
-$isAdmin = isset($_SESSION['user']['role']) && (int) $_SESSION['user']['role'] === 2;
-$critiques = [];
+$currentUser = $authService->currentUser();
+$userId = $authService->userId();
+$pseudo = $currentUser['pseudo'] ?? 'Visiteur';
+$isAdmin = $authService->isAdmin();
 
-$stmt = $pdo->prepare("
-    SELECT id, titre, contenu, note, date_creation
-    FROM critique
-    WHERE id_user = ?
-    ORDER BY date_creation DESC, id DESC
-");
-$stmt->execute([$userId]);
-$critiques = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
+$critiques = $reviewService->getByUserIdWithLikes($userId);
 $totalCritiques = count($critiques);
-$noteMoyenne = 0;
-
-if ($totalCritiques > 0) {
-    $somme = 0;
-    foreach ($critiques as $critique) {
-        $somme += (int) $critique['note'];
-    }
-    $noteMoyenne = round($somme / $totalCritiques, 1);
-}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -43,27 +23,21 @@ if ($totalCritiques > 0) {
 body {
     margin: 0;
     min-height: 100vh;
-    background-color: #f3f3f3;
-    color: #111111;
-    font-family: Arial, Helvetica, sans-serif;
+    background: #151515;
+    color: #ffffff;
+    font-family: "Roboto", sans-serif;
 }
 a {
     text-decoration: none;
 }
-:root {
-    --black: #050505;
-    --red: #c3110c;
-    --red-dark: #8f0d09;
-    --white: #ffffff;
-}
 .custom-navbar {
-    background: linear-gradient(180deg, #c3110c 0%, #7e0d09 45%, #1a0707 75%, #050505 100%);
+    background: #000;
     padding: 1rem 0;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
 .custom-navbar .navbar-brand,
 .welcome-text {
-    color: var(--white);
+    color: #fff;
 }
 .custom-navbar .navbar-brand {
     font-size: 1.5rem;
@@ -71,159 +45,292 @@ a {
 }
 .custom-logout-btn {
     border-radius: 8px;
-    font-weight: 600;
+    font-weight: 700;
+    background: linear-gradient(135deg, #e53935 0%, #a30f0b 100%);
+    border: none;
+    color: #fff;
+}
+.custom-logout-btn:hover {
+    color: #fff;
+    background: linear-gradient(135deg, #c3110c 0%, #7d0906 100%);
+}
+.custom-admin-top-btn {
+    border-radius: 8px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #ffffff 0%, #f3dede 100%);
+    color: #8f0d09;
+    border: none;
 }
 .dashboard-hero {
-    background: linear-gradient(180deg, #d41414 0%, #a30f0b 25%, #5f0a08 50%, #1c0807 75%, #050505 100%);
-    color: var(--white);
-    padding: 80px 0 90px;
-    text-align: center;
+    background:
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.15), #151515),
+        url('img/f-2.jpg');
+    background-size: cover;
+    background-position: center;
+    min-height: 58vh;
+    padding: 90px 0 80px;
+    display: flex;
+    align-items: flex-end;
 }
 .hero-content {
-    max-width: 800px;
-    margin: 0 auto;
+    max-width: 760px;
+}
+.dashboard-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #fff;
+    font-weight: 700;
+    margin-bottom: 22px;
+}
+.dashboard-back-link::before {
+    content: "\2190";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    background: rgba(255, 34, 34, 0.18);
+    border: 1px solid rgba(255, 34, 34, 0.35);
+    color: #ff4b4b;
+    font-size: 1rem;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+.dashboard-back-link:hover {
+    color: #fff;
+}
+.dashboard-back-link:hover::before {
+    transform: translateX(-3px);
+    background: rgba(255, 34, 34, 0.28);
+}
+.dashboard-kicker {
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    color: #ff8f8a;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
 }
 .dashboard-title {
-    font-size: 3rem;
+    font-size: 3.4rem;
     font-weight: 800;
-    margin-bottom: 15px;
+    margin-bottom: 16px;
 }
 .dashboard-subtitle {
-    font-size: 1.1rem;
-    color: #f0dede;
-    margin-bottom: 25px;
-}
-.custom-btn-primary {
-    background: linear-gradient(135deg, #e53935 0%, #c3110c 100%);
-    color: var(--white);
-    border: none;
-    padding: 12px 24px;
-    border-radius: 10px;
-    font-weight: 700;
-}
-.custom-btn-primary:hover {
-    background: linear-gradient(135deg, #c3110c 0%, #8f0d09 100%);
-    color: var(--white);
-}
-.custom-btn-admin {
-    background: transparent;
-    color: var(--white);
-    border: 1px solid rgba(255, 255, 255, 0.55);
-    padding: 12px 24px;
-    border-radius: 10px;
-    font-weight: 700;
-    margin-left: 12px;
-}
-.custom-btn-admin:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--white);
+    width: min(640px, 100%);
+    color: #d3d3d3;
+    font-size: 1.05rem;
+    line-height: 1.7;
+    margin-bottom: 0;
 }
 .dashboard-content {
-    margin-top: -40px;
-    position: relative;
-    z-index: 2;
+    padding: 34px 0 60px;
 }
-.stats-card {
-    background: var(--white);
-    border-radius: 18px;
-    padding: 25px;
-    text-align: center;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-    border-top: 5px solid var(--red);
+.section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 22px;
 }
-.stats-card h3 {
-    font-size: 1.1rem;
-    margin-bottom: 10px;
-    color: #222;
-}
-.stats-card p {
+.section-title {
     font-size: 2rem;
     font-weight: 800;
     margin: 0;
-    color: var(--red);
+}
+.section-copy {
+    color: #b7b7b7;
+    margin: 6px 0 0;
+}
+.review-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 72px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    background: rgba(255, 34, 34, 0.12);
+    border: 1px solid rgba(255, 34, 34, 0.22);
+    color: #ff6f69;
+    font-weight: 800;
 }
 .critique-card {
+    position: relative;
+    overflow: hidden;
     border: none;
     border-radius: 18px;
-    overflow: hidden;
-    background: var(--white);
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+    background: linear-gradient(180deg, rgba(34, 34, 34, 0.98) 0%, rgba(20, 20, 20, 1) 100%);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
     transition: transform 0.25s ease, box-shadow 0.25s ease;
-    border-top: 5px solid var(--red);
+    border-top: 3px solid #c3110c;
 }
 .critique-card:hover {
     transform: translateY(-6px);
-    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.14);
+    box-shadow: 0 22px 50px rgba(0, 0, 0, 0.42);
 }
 .critique-card .card-body {
-    padding: 1.4rem;
+    padding: 1.5rem;
 }
 .card-title {
     font-size: 1.2rem;
     font-weight: 700;
-    color: var(--black);
+    color: #fff;
     margin-bottom: 0;
 }
 .card-text {
-    color: #444;
-    line-height: 1.6;
+    color: #d2d2d2;
+    line-height: 1.7;
     white-space: pre-line;
 }
+.card-actions {
+    margin-top: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.card-action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.edit-review-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 999px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-weight: 700;
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+.edit-review-link::before {
+    content: "\270E";
+    color: #ff7d77;
+    font-size: 0.95rem;
+}
+.edit-review-link:hover {
+    color: #fff;
+    background: rgba(255, 34, 34, 0.12);
+    border-color: rgba(255, 34, 34, 0.25);
+    transform: translateY(-2px);
+}
+.delete-review-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
+    background: rgba(255, 34, 34, 0.12);
+    border: 1px solid rgba(255, 34, 34, 0.25);
+    color: #fff;
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+.delete-review-link::before {
+    content: "\1F5D1";
+    color: #ff7d77;
+    font-size: 1rem;
+}
+.delete-review-link:hover {
+    color: #fff;
+    background: rgba(255, 34, 34, 0.2);
+    border-color: rgba(255, 34, 34, 0.35);
+    transform: translateY(-2px);
+}
+.like-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.like-btn {
+    border: none;
+    background: transparent;
+    color: #9f9f9f;
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.18s ease, color 0.18s ease;
+}
+.like-btn:hover {
+    transform: scale(1.08);
+}
+.like-btn.liked {
+    color: #ff4b4b;
+}
+.like-btn.pop {
+    animation: likePop 0.35s ease;
+}
+.like-count {
+    color: #fff;
+    font-weight: 700;
+    min-width: 14px;
+}
+.like-label {
+    color: #d2d2d2;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+@keyframes likePop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.35); }
+    100% { transform: scale(1); }
+}
 .critique-date {
-    color: #777;
+    color: #9a9a9a;
     font-size: 0.9rem;
     margin-bottom: 12px;
 }
 .note-badge {
     background: linear-gradient(135deg, #e53935 0%, #c3110c 100%);
-    color: var(--white);
+    color: #fff;
     padding: 7px 11px;
     border-radius: 999px;
     font-size: 0.85rem;
     font-weight: 700;
 }
 .empty-state {
-    background: var(--white);
+    background: linear-gradient(180deg, rgba(34, 34, 34, 0.98) 0%, rgba(20, 20, 20, 1) 100%);
     border-radius: 20px;
-    padding: 50px 25px;
+    padding: 54px 28px;
     text-align: center;
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
-    border-top: 5px solid var(--red);
-    max-width: 750px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+    border-top: 3px solid #c3110c;
+    max-width: 760px;
     margin: 0 auto;
 }
 .empty-state h3 {
-    color: var(--black);
+    color: #fff;
     margin-bottom: 15px;
-    font-weight: 700;
+    font-weight: 800;
+    font-size: 2rem;
 }
 .empty-state p {
-    color: #666;
-    margin-bottom: 20px;
-}
-.custom-footer {
-    background: linear-gradient(180deg, #1a0707 0%, #050505 100%);
-    color: #ffffff;
-    padding: 50px 0 20px;
-    margin-top: 60px;
+    color: #bdbdbd;
+    margin-bottom: 0;
 }
 @media (max-width: 768px) {
     .dashboard-title {
-        font-size: 2.1rem;
+        font-size: 2.4rem;
     }
     .dashboard-subtitle {
         font-size: 1rem;
     }
-    .custom-btn-primary {
-        width: 100%;
-    }
-    .custom-btn-admin {
-        width: 100%;
-        margin-left: 0;
-        margin-top: 12px;
-    }
     .welcome-text {
         display: none;
+    }
+    .section-heading {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }
     </style>
@@ -236,7 +343,11 @@ a {
 
         <div class="ms-auto d-flex align-items-center gap-3">
             <span class="welcome-text">Bonjour, <?= htmlspecialchars($pseudo, ENT_QUOTES, 'UTF-8') ?></span>
-            <a href="/revieweo/auth/logout.php" class="btn btn-light btn-sm custom-logout-btn">Deconnexion</a>
+            <?php if ($isAdmin): ?>
+                <a href="admin_reviews.php" class="btn btn-sm custom-admin-top-btn">Espace Admin</a>
+            <?php else: ?>
+                <a href="/revieweo/auth/logout.php" class="btn btn-sm custom-logout-btn">Deconnexion</a>
+            <?php endif; ?>
         </div>
     </div>
 </nav>
@@ -244,34 +355,24 @@ a {
 <section class="dashboard-hero">
     <div class="container">
         <div class="hero-content">
-            <h1 class="dashboard-title">Mon Dashboard</h1>
+            <a class="dashboard-back-link" href="/revieweo/pages/index.php">Retour a l'accueil</a>
+            <div class="dashboard-kicker">Espace personnel</div>
+            <h1 class="dashboard-title">Tes critiques, comme une vraie collection cinema</h1>
             <p class="dashboard-subtitle">
-                Retrouve toutes tes critiques publiees depuis ton espace personnel.
+                Explore tout ce que tu as deja publie dans une ambiance plus proche de l'accueil, plus immersive, plus nette, plus Revieweo.
             </p>
-            <a href="create_review.php" class="btn custom-btn-primary">+ Ajouter une critique</a>
-            <?php if ($isAdmin): ?>
-                <a href="admin_reviews.php" class="btn custom-btn-admin">Admin</a>
-            <?php endif; ?>
         </div>
     </div>
 </section>
 
-<section class="dashboard-content py-5">
+<section class="dashboard-content">
     <div class="container">
-        <div class="row g-4 mb-5">
-            <div class="col-12 col-md-6">
-                <div class="stats-card">
-                    <h3>Nombre de critiques</h3>
-                    <p><?= $totalCritiques ?></p>
-                </div>
+        <div class="section-heading">
+            <div>
+                <h2 class="section-title">Bibliotheque des reviews</h2>
+                <p class="section-copy">Retrouve chaque avis publie, du plus recent au plus ancien.</p>
             </div>
-
-            <div class="col-12 col-md-6">
-                <div class="stats-card">
-                    <h3>Note moyenne</h3>
-                    <p><?= $noteMoyenne ?>/5</p>
-                </div>
-            </div>
+            <div class="review-count"><?= $totalCritiques ?> review<?= $totalCritiques > 1 ? 's' : '' ?></div>
         </div>
 
         <?php if ($totalCritiques > 0): ?>
@@ -289,10 +390,24 @@ a {
                                     <h5 class="card-title"><?= htmlspecialchars($critique['titre'], ENT_QUOTES, 'UTF-8') ?></h5>
                                     <span class="note-badge"><?= (int) $critique['note'] ?>/5</span>
                                 </div>
-
                                 <p class="critique-date">Publiee le <?= htmlspecialchars($dateFormatee, ENT_QUOTES, 'UTF-8') ?></p>
-
                                 <p class="card-text flex-grow-1"><?= htmlspecialchars($resume, ENT_QUOTES, 'UTF-8') ?></p>
+                                <div class="card-actions">
+                                    <div class="like-chip">
+                                        <button class="like-btn <?= (int) $critique['user_liked'] === 1 ? 'liked' : '' ?>" data-id="<?= (int) $critique['id'] ?>" type="button" aria-label="Aimer cette critique">❤️</button>
+                                        <span class="like-count" id="like-count-<?= (int) $critique['id'] ?>"><?= (int) $critique['likes_count'] ?></span>
+                                        <span class="like-label">likes</span>
+                                    </div>
+                                    <div class="card-action-buttons">
+                                        <a class="edit-review-link" href="/revieweo/pages/review_detail.php?id=<?= (int) $critique['id'] ?>">
+                                            Voir la critique
+                                        </a>
+                                        <a class="edit-review-link" href="/revieweo/pages/edit_review.php?id=<?= (int) $critique['id'] ?>">
+                                            Modifier
+                                        </a>
+                                        <a class="delete-review-link" href="/revieweo/pages/delete_review.php?id=<?= (int) $critique['id'] ?>" onclick="return confirm('Supprimer cette critique ?');" aria-label="Supprimer cette critique" title="Supprimer cette critique"></a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -300,9 +415,8 @@ a {
             </div>
         <?php else: ?>
             <div class="empty-state">
-                <h3>Tu n'as encore publie aucune critique</h3>
-                <p>Commence des maintenant en ajoutant ta premiere critique.</p>
-                <a href="create_review.php" class="btn custom-btn-primary">Creer une critique</a>
+                <h3>Ta bibliotheque est encore vide</h3>
+                <p>Depuis l'accueil, clique sur un film pour commencer ta premiere review et donner vie a ton espace.</p>
             </div>
         <?php endif; ?>
     </div>
@@ -310,5 +424,43 @@ a {
 
 <?php require_once '../includes/footer.php'; ?>
 
+<script>
+document.querySelectorAll('.like-btn').forEach((button) => {
+    button.addEventListener('click', function () {
+        const critiqueId = this.dataset.id;
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/revieweo/actions/like.php', true);
+        xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+
+        xhr.onload = () => {
+            if (xhr.status === 200) {
+                const data = JSON.parse(xhr.responseText);
+
+                if (data.error === 'not_logged') {
+                    window.location.href = '/revieweo/auth/login.php';
+                    return;
+                }
+
+                this.classList.remove('pop');
+                void this.offsetWidth;
+                this.classList.add('pop');
+
+                if (data.status === 'liked') {
+                    this.classList.add('liked');
+                } else {
+                    this.classList.remove('liked');
+                }
+
+                document.getElementById('like-count-' + critiqueId).innerText = data.likes;
+            }
+        };
+
+        xhr.send('id_critique=' + encodeURIComponent(critiqueId));
+    });
+});
+</script>
+
 </body>
 </html>
+
+

@@ -3,9 +3,29 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+require_once __DIR__ . '/../config/db.php';
+
 $currentUser = $_SESSION['user'] ?? null;
 $isLoggedIn = isset($currentUser['id']);
 $profileLabel = $isLoggedIn ? htmlspecialchars($currentUser['pseudo'], ENT_QUOTES, 'UTF-8') : 'Profile';
+$siteCategories = $categoryService->getAll();
+
+$categoryAnchors = [
+    'drama' => 'drama',
+    'comedy' => 'comedy',
+    'action' => 'action',
+    'horror' => 'horror',
+    'sci-fi' => 'sci-fi',
+    'sci fi' => 'sci-fi',
+    'western' => 'western',
+    'romance' => 'romance',
+    'thriller' => 'thriller',
+    'fantasy' => 'fantacy',
+    'fantacy' => 'fantacy',
+    'apocalypse' => 'apocalypse',
+    'martial arts' => 'martial-arts',
+    'sports' => 'sports',
+];
 ?>
 <style>
 * {
@@ -44,21 +64,38 @@ body {
 
 .logo {
   font-size: 30px;
-  color: #4dbf00;
+  color: #ff2222;
 }
 
 .menu-container {
   flex: 6;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .menu-list {
   display: flex;
   list-style: none;
+  align-items: center;
+  margin-left: auto;
 }
 
 .menu-list-item {
   margin-right: 30px;
   cursor: pointer;
+}
+
+.menu-list-item:last-child {
+  margin-right: 0;
+}
+
+.join-us-link {
+  color: #fff !important;
+  font-weight: 700;
+}
+
+.join-us-link:hover {
+  color: #ff2222 !important;
 }
 
 .category-menu {
@@ -82,7 +119,9 @@ body {
   padding: 10px;
   border-radius: 10px;
   display: none;
-  width: 150px;
+  width: 190px;
+  max-height: 320px;
+  overflow-y: auto;
 }
 
 .category-box ul {
@@ -96,7 +135,7 @@ body {
 }
 
 .category-box li:hover {
-  background-color: #4dbf00;
+  background-color: #a30f0b;
 }
 
 .category-box.active {
@@ -126,13 +165,6 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.profile-picture {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
 }
 
 .login-box {
@@ -169,7 +201,7 @@ body {
 
 .login-btn,
 .login-box-link.dashboard-link {
-  background-color: #4dbf00;
+  background: linear-gradient(135deg, #e53935 0%, #a30f0b 100%);
 }
 
 .register-btn {
@@ -184,7 +216,7 @@ body {
 <div class="navbar">
   <div class="navbar-container">
     <div class="logo-container">
-      <h1 class="logo">logo</h1>
+      <h1 class="logo">Revieweo</h1>
     </div>
     <div class="menu-container">
       <ul class="menu-list">
@@ -192,18 +224,21 @@ body {
           <button type="button" class="category-toggle">Categorie</button>
           <div class="category-box" id="categoryBox">
             <ul>
-              <li><a href="/revieweo/pages/index.php#drama">Drama</a></li>
-              <li><a href="/revieweo/pages/index.php#comedy">Comedy</a></li>
-              <li><a href="/revieweo/pages/index.php#action">Action</a></li>
-              <li><a href="/revieweo/pages/index.php#horror">Horror</a></li>
-              <li><a href="/revieweo/pages/index.php#sci-fi">Sci-fi</a></li>
-              <li><a href="/revieweo/pages/index.php#western">Western</a></li>
-              <li><a href="/revieweo/pages/index.php#romance">Romance</a></li>
-              <li><a href="/revieweo/pages/index.php#thriller">Thriller</a></li>
-              <li><a href="/revieweo/pages/index.php#fantacy">Fantasy</a></li>
-              <li><a href="/revieweo/pages/index.php#apocalypse">Apocalypse</a></li>
-              <li><a href="/revieweo/pages/index.php#martial-arts">Martial Arts</a></li>
-              <li><a href="/revieweo/pages/index.php#sports">Sports</a></li>
+              <?php if (!empty($siteCategories)): ?>
+                <?php foreach ($siteCategories as $siteCategory): ?>
+                  <?php
+                  $categoryName = strtolower(trim((string) $siteCategory['nom']));
+                  $anchor = $categoryAnchors[$categoryName] ?? null;
+                  ?>
+                  <li>
+                    <a href="<?= $anchor ? '/revieweo/pages/index.php#' . $anchor : '/revieweo/pages/index.php' ?>">
+                      <?= htmlspecialchars($siteCategory['nom'], ENT_QUOTES, 'UTF-8') ?>
+                    </a>
+                  </li>
+                <?php endforeach; ?>
+              <?php else: ?>
+                <li><span>Aucune categorie</span></li>
+              <?php endif; ?>
             </ul>
           </div>
         </li>
@@ -211,12 +246,11 @@ body {
           <a href="/revieweo/pages/dashboard.php">Dashboard</a>
         </li>
         <li class="menu-list-item">
-          <a href="/revieweo/pages/create_review.php">Write review</a>
+          <a class="join-us-link" href="/revieweo/auth/register.php">Rejoindre nous</a>
         </li>
       </ul>
     </div>
     <div class="profile-container">
-      <img class="profile-picture" src="" alt="Photo de profil" />
       <div class="profile-text-container">
         <span class="profile-text"><?= $profileLabel ?></span>
         <i class="fas fa-caret-down"></i>
@@ -225,7 +259,7 @@ body {
 
     <div class="login-box" id="loginBox">
       <?php if ($isLoggedIn): ?>
-        <a class="login-box-link dashboard-link" href="/revieweo/pages/dashboard.php">Mon dashboard</a>
+        <a class="login-box-link dashboard-link" href="/revieweo/auth/login.php">Se connecter</a>
         <a class="logout-btn" href="/revieweo/auth/logout.php">Deconnexion</a>
       <?php else: ?>
         <button class="login-btn" type="button" onclick="window.location.href='/revieweo/auth/login.php'">Login</button>
@@ -273,3 +307,4 @@ document.addEventListener("click", (event) => {
   }
 });
 </script>
+

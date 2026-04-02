@@ -2,42 +2,19 @@
 session_start();
 require_once '../config/db.php';
 
-if (!isset($_SESSION['user']['id']) || !isset($_SESSION['user']['role'])) {
-    header('Location: ../auth/login.php');
-    exit();
-}
-
-if ((int) $_SESSION['user']['role'] !== 2) {
-    die('Acces reserve aux administrateurs.');
-}
+$authService->requireAdmin('../auth/login.php');
 
 if (isset($_GET['delete'])) {
     $deleteId = (int) $_GET['delete'];
-    if ($deleteId !== (int) $_SESSION['user']['id']) {
-        $stmt = $pdo->prepare('DELETE FROM user WHERE id = ?');
-        $stmt->execute([$deleteId]);
+    if ($deleteId !== $authService->userId()) {
+        $userService->deleteById($deleteId);
     }
     header('Location: admin_users.php');
     exit();
 }
 
-$stmt = $pdo->query("
-    SELECT user.id, user.pseudo, user.email, user.role,
-           COUNT(critique.id) AS total_reviews
-    FROM user
-    LEFT JOIN critique ON critique.id_user = user.id
-    GROUP BY user.id, user.pseudo, user.email, user.role
-    ORDER BY user.role DESC, user.id DESC
-");
-$users = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
+$users = $userService->getAllWithReviewCounts();
 $totalUsers = count($users);
-$adminCount = 0;
-foreach ($users as $user) {
-    if ((int) $user['role'] === 2) {
-        $adminCount++;
-    }
-}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -50,74 +27,57 @@ foreach ($users as $user) {
 body {
     margin: 0;
     min-height: 100vh;
-    background:
-        radial-gradient(circle at top left, rgba(255, 33, 33, 0.15), transparent 28%),
-        linear-gradient(180deg, #0f0505 0%, #060606 45%, #020202 100%);
-    color: #fff;
-    font-family: Arial, Helvetica, sans-serif;
+    background: #151515;
+    color: #ffffff;
+    font-family: "Roboto", sans-serif;
 }
 a {
     text-decoration: none;
 }
-.admin-shell {
-    padding: 32px 0 60px;
+.admin-navbar {
+    background: #000;
+    padding: 1rem 0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
-.admin-topbar {
-    background: rgba(18, 18, 18, 0.92);
-    border: 1px solid rgba(255, 40, 40, 0.16);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-    border-radius: 24px;
-    padding: 20px 24px;
-    margin-bottom: 28px;
+.admin-navbar .navbar-brand {
+    color: #fff;
+    font-size: 1.5rem;
+    letter-spacing: 1px;
 }
-.brand-mark {
-    font-size: 1.6rem;
-    font-weight: 800;
-    letter-spacing: 2px;
-    color: #ff3b30;
-}
-.admin-nav {
+.admin-nav-links {
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
 }
-.admin-nav a {
+.admin-nav-links a {
     padding: 10px 16px;
     border-radius: 999px;
-    background: #1c1c1c;
-    color: #f5d8d8;
-    border: 1px solid rgba(255, 59, 48, 0.18);
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
-.admin-nav a.active,
-.admin-nav a:hover {
-    background: linear-gradient(135deg, #ff3126 0%, #a30f0b 100%);
+.admin-nav-links a.active,
+.admin-nav-links a:hover {
+    background: linear-gradient(135deg, #e53935 0%, #a30f0b 100%);
     color: #fff;
 }
-.hero-panel {
-    position: relative;
-    overflow: hidden;
-    background: linear-gradient(135deg, rgba(255, 40, 40, 0.18) 0%, rgba(20, 20, 20, 0.96) 55%, rgba(8, 8, 8, 1) 100%);
-    border-radius: 32px;
-    padding: 42px 36px;
-    border: 1px solid rgba(255, 65, 65, 0.18);
-    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.38);
-    margin-bottom: 28px;
+.admin-hero {
+    background:
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.2), #151515),
+        url('img/f-2.jpg');
+    background-size: cover;
+    background-position: center;
+    min-height: 48vh;
+    padding: 90px 0 70px;
+    display: flex;
+    align-items: flex-end;
 }
-.hero-panel::before {
-    content: "";
-    position: absolute;
-    bottom: -100px;
-    right: -30px;
-    width: 280px;
-    height: 280px;
-    background: radial-gradient(circle, rgba(255, 59, 48, 0.45), transparent 70%);
-}
-.hero-label {
+.hero-kicker {
     text-transform: uppercase;
-    letter-spacing: 3px;
+    letter-spacing: 4px;
     color: #ff8f8a;
-    font-size: 0.85rem;
-    margin-bottom: 12px;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
 }
 .hero-title {
     font-size: 3rem;
@@ -126,34 +86,46 @@ a {
 }
 .hero-copy {
     max-width: 720px;
-    color: #f4c6c3;
-    font-size: 1.05rem;
+    color: #d3d3d3;
+    line-height: 1.7;
 }
-.stat-card {
-    background: linear-gradient(180deg, rgba(30, 30, 30, 0.95) 0%, rgba(15, 15, 15, 0.98) 100%);
-    border-radius: 24px;
-    padding: 24px;
-    border: 1px solid rgba(255, 55, 55, 0.14);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 18px 44px rgba(0, 0, 0, 0.25);
-    height: 100%;
+.admin-content {
+    padding: 34px 0 60px;
 }
-.stat-card h3 {
-    font-size: 0.95rem;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: #ff9d99;
+.section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 22px;
 }
-.stat-card p {
-    margin: 12px 0 0;
-    font-size: 2.4rem;
+.section-title {
+    font-size: 2rem;
     font-weight: 800;
-    color: #fff;
+    margin: 0;
+}
+.section-copy {
+    color: #b7b7b7;
+    margin: 6px 0 0;
+}
+.users-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 72px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    background: rgba(255, 34, 34, 0.12);
+    border: 1px solid rgba(255, 34, 34, 0.22);
+    color: #ff6f69;
+    font-weight: 800;
 }
 .users-panel {
-    background: rgba(255,255,255,0.96);
-    border-radius: 28px;
+    background: linear-gradient(180deg, rgba(34, 34, 34, 0.98) 0%, rgba(20, 20, 20, 1) 100%);
+    border-radius: 18px;
     padding: 18px;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+    border-top: 3px solid #c3110c;
 }
 .users-table {
     width: 100%;
@@ -161,15 +133,15 @@ a {
     border-spacing: 0 12px;
 }
 .users-table thead th {
-    color: #7a2222;
+    color: #ffb2ad;
     font-size: 0.9rem;
     text-transform: uppercase;
     letter-spacing: 1.6px;
     padding: 0 18px 8px;
 }
 .users-table tbody tr {
-    background: linear-gradient(180deg, #fff 0%, #f7f7f7 100%);
-    box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.12);
 }
 .users-table tbody td {
     padding: 18px;
@@ -206,7 +178,7 @@ a {
 }
 .btn-delete-user {
     display: inline-block;
-    background: linear-gradient(135deg, #ff3226 0%, #980c08 100%);
+    background: linear-gradient(135deg, #e53935 0%, #a30f0b 100%);
     color: #fff;
     padding: 10px 16px;
     border-radius: 12px;
@@ -214,7 +186,7 @@ a {
 }
 .btn-delete-user:hover {
     color: #fff;
-    background: linear-gradient(135deg, #d31d14 0%, #7d0906 100%);
+    background: linear-gradient(135deg, #c3110c 0%, #7d0906 100%);
 }
 .self-label {
     color: #7a2222;
@@ -240,84 +212,90 @@ a {
         border-radius: 0 !important;
         padding: 14px 16px;
     }
+    .hero-title {
+        font-size: 2.2rem;
+    }
+    .section-heading {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 }
     </style>
 </head>
 <body>
-    <div class="container admin-shell">
-        <div class="admin-topbar d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
-            <div>
-                <div class="brand-mark">REVIEWEO ADMIN</div>
-                <div class="text-light-emphasis">Vue complete des utilisateurs de la plateforme</div>
-            </div>
-            <div class="admin-nav">
-                <a href="/revieweo/pages/admin_reviews.php">Admin Reviews</a>
-                <a class="active" href="/revieweo/pages/admin_users.php">Admin Users</a>
-                <a href="/revieweo/pages/dashboard.php">Dashboard</a>
+    <nav class="navbar navbar-expand-lg admin-navbar">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/revieweo/pages/index.php">REVIEWEO</a>
+            <div class="ms-auto admin-nav-links">
+                <a href="/revieweo/pages/admin_reviews.php">Moderation Reviews</a>
+                <a class="active" href="/revieweo/pages/admin_users.php">Gestion Utilisateurs</a>
+                <a href="/revieweo/pages/dashboard.php">Retour Dashboard</a>
                 <a href="/revieweo/auth/logout.php">Deconnexion</a>
             </div>
         </div>
+    </nav>
 
-        <div class="hero-panel">
-            <div class="hero-label">Administration</div>
-            <h1 class="hero-title">Tous les utilisateurs, visibles en un instant</h1>
-            <p class="hero-copy">Cette interface rassemble les comptes, leur role et leur activite. Tu peux garder un oeil sur la plateforme et supprimer un compte si necessaire.</p>
+    <section class="admin-hero">
+        <div class="container">
+            <div class="hero-kicker">Console administration</div>
+            <h1 class="hero-title">Pilotage des comptes utilisateurs</h1>
+            <p class="hero-copy">Retrouve tous les comptes de la plateforme dans une interface plus propre et plus cohérente avec le nouveau style global de Revieweo.</p>
         </div>
+    </section>
 
-        <div class="row g-4 mb-4">
-            <div class="col-12 col-md-6">
-                <div class="stat-card">
-                    <h3>Total utilisateurs</h3>
-                    <p><?= $totalUsers ?></p>
+    <section class="admin-content">
+        <div class="container">
+            <div class="section-heading">
+                <div>
+                    <h2 class="section-title">Repertoire des utilisateurs</h2>
+                    <p class="section-copy">Consulte les comptes, leur role et leur activite, puis supprime si necessaire.</p>
                 </div>
+                <div class="users-count"><?= $totalUsers ?> comptes</div>
             </div>
-            <div class="col-12 col-md-6">
-                <div class="stat-card">
-                    <h3>Administrateurs</h3>
-                    <p><?= $adminCount ?></p>
-                </div>
-            </div>
-        </div>
 
-        <div class="users-panel">
-            <table class="users-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Utilisateur</th>
-                        <th>Role</th>
-                        <th>Reviews</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($users as $user): ?>
+            <div class="users-panel">
+                <table class="users-table">
+                    <thead>
                         <tr>
-                            <td>#<?= (int) $user['id'] ?></td>
-                            <td>
-                                <div class="user-name"><?= htmlspecialchars($user['pseudo'], ENT_QUOTES, 'UTF-8') ?></div>
-                                <div class="user-email"><?= htmlspecialchars($user['email'], ENT_QUOTES, 'UTF-8') ?></div>
-                            </td>
-                            <td>
-                                <?php if ((int) $user['role'] === 2): ?>
-                                    <span class="role-badge role-admin">Admin</span>
-                                <?php else: ?>
-                                    <span class="role-badge role-user">Utilisateur</span>
-                                <?php endif; ?>
-                            </td>
-                            <td><?= (int) $user['total_reviews'] ?></td>
-                            <td>
-                                <?php if ((int) $user['id'] !== (int) $_SESSION['user']['id']): ?>
-                                    <a class="btn-delete-user" href="/revieweo/pages/admin_users.php?delete=<?= (int) $user['id'] ?>" onclick="return confirm('Supprimer cet utilisateur ?');">Supprimer</a>
-                                <?php else: ?>
-                                    <span class="self-label">Vous</span>
-                                <?php endif; ?>
-                            </td>
+                            <th>ID</th>
+                            <th>Utilisateur</th>
+                            <th>Role</th>
+                            <th>Reviews</th>
+                            <th>Action</th>
                         </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($users as $user): ?>
+                            <tr>
+                                <td>#<?= (int) $user['id'] ?></td>
+                                <td>
+                                    <div class="user-name"><?= htmlspecialchars($user['pseudo'], ENT_QUOTES, 'UTF-8') ?></div>
+                                    <div class="user-email"><?= htmlspecialchars($user['email'], ENT_QUOTES, 'UTF-8') ?></div>
+                                </td>
+                                <td>
+                                    <?php if ((int) $user['role'] === 2): ?>
+                                        <span class="role-badge role-admin">Admin</span>
+                                    <?php else: ?>
+                                        <span class="role-badge role-user">Utilisateur</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?= (int) $user['total_reviews'] ?></td>
+                                <td>
+                                    <?php if ((int) $user['id'] !== (int) $_SESSION['user']['id']): ?>
+                                        <a class="btn-delete-user" href="/revieweo/pages/admin_users.php?delete=<?= (int) $user['id'] ?>" onclick="return confirm('Supprimer cet utilisateur ?');">Supprimer</a>
+                                    <?php else: ?>
+                                        <span class="self-label">Vous</span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
+    </section>
+
+    <?php require_once '../includes/footer.php'; ?>
 </body>
 </html>
+

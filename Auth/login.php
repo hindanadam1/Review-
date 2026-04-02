@@ -2,7 +2,7 @@
 session_start();
 require_once '../config/db.php';
 
-if (isset($_SESSION['user']['id'])) {
+if ($authService->isLoggedIn()) {
     header("Location: ../pages/dashboard.php");
     exit();
 }
@@ -16,20 +16,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($login === '' || $password === '') {
         $error = "Veuillez remplir tous les champs.";
     } else {
-        $stmt = $pdo->prepare("SELECT id, pseudo, email, password, role FROM user WHERE LOWER(email) = LOWER(?) OR pseudo = ? ORDER BY id DESC LIMIT 1");
-        $stmt->execute([$login, $login]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        $user = $authService->login($login, $password);
 
-        if ($user && password_verify($password, $user['password'])) {
-            session_regenerate_id(true);
-
-            $_SESSION['user'] = [
-                'id' => (int) $user['id'],
-                'pseudo' => $user['pseudo'],
-                'email' => $user['email'],
-                'role' => (int) $user['role']
-            ];
-
+        if ($user !== null) {
             header("Location: ../pages/dashboard.php");
             exit();
         }
@@ -46,23 +35,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Connexion | Revieweo</title>
     <link rel="stylesheet" href="../style.css">
 </head>
-<body class="auth-bg">
-    <div class="auth-container">
-        <div class="auth-animated-glow"></div>
-        <div class="auth-content">
-            <div class="auth-title">Se connecter</div>
-            <?php if ($error): ?>
-                <div class="auth-error"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>
-            <?php endif; ?>
-            <form class="auth-form" method="POST" autocomplete="off">
-                <input name="email" type="text" placeholder="Email ou pseudo" required maxlength="100">
-                <input name="password" type="password" placeholder="Mot de passe" required maxlength="64">
-                <button type="submit">Connexion</button>
-            </form>
-            <div class="auth-footer-link">
-                <a href="register.php">Pas encore de compte ? S'inscrire</a>
+<body class="auth-bg" style="display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;">
+    <main style="flex:1;width:100%;display:flex;align-items:center;justify-content:center;padding:32px 16px;">
+        <div class="auth-container">
+            <div class="auth-animated-glow"></div>
+            <div class="auth-content">
+                <div class="auth-title">Se connecter</div>
+                <?php if ($error): ?>
+                    <div class="auth-error"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>
+                <?php endif; ?>
+                <form class="auth-form" method="POST" autocomplete="off">
+                    <input name="email" type="text" placeholder="Email ou pseudo" required maxlength="100">
+                    <input name="password" type="password" placeholder="Mot de passe" required maxlength="64">
+                    <button type="submit">Connexion</button>
+                </form>
+                <div class="auth-footer-link">
+                    <a href="register.php">Pas encore de compte ? S'inscrire</a>
+                </div>
             </div>
         </div>
-    </div>
+    </main>
+    <?php require_once '../includes/footer.php'; ?>
 </body>
 </html>
+

@@ -1,86 +1,63 @@
-/* Style harmonisé pour register, create, edit */
-.register-container {
-    background: rgba(20, 20, 20, 0.98);
-    border-radius: 20px;
-    box-shadow: 0 0 40px 5px #900;
-    padding: 40px 32px 32px 32px;
-    width: 350px;
-    position: relative;
-    overflow: hidden;
-    margin: 40px auto;
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #fff;
+    font-weight: 600;
+    margin-bottom: 18px;
 }
-.register-title {
-    font-size: 2.2em;
-    font-weight: bold;
-    color: #ff2222;
-    margin-bottom: 24px;
-    letter-spacing: 2px;
-    text-align: center;
-    position: relative;
+
+.back-link::before {
+    content: "\2190";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    background: rgba(255, 34, 34, 0.18);
+    border: 1px solid rgba(255, 34, 34, 0.35);
+    color: #ff4b4b;
+    font-size: 1rem;
+    transition: transform 0.2s ease, background 0.2s ease;
 }
-.register-form input,
-.register-form textarea {
+
+.back-link:hover::before {
+    transform: translateX(-3px);
+    background: rgba(255, 34, 34, 0.28);
+}
+
+.register-form select,
+.register-form .category-select {
     width: 100%;
     padding: 12px 14px;
     margin: 12px 0;
-    border: none;
+    border: none !important;
     border-radius: 8px;
-    background: #222;
-    color: #fff;
+    background: #222 !important;
+    color: #fff !important;
     font-size: 1em;
-    transition: box-shadow 0.2s;
-    resize: none;
+    box-sizing: border-box;
+    display: block;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    outline: none;
+    box-shadow: none;
 }
-.register-form input:focus,
-.register-form textarea:focus {
+
+.register-form select:focus,
+.register-form .category-select:focus {
     outline: none;
     box-shadow: 0 0 0 2px #ff2222;
 }
-.register-form button {
-    width: 100%;
-    padding: 12px;
-    background: linear-gradient(90deg, #900, #ff2222);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-size: 1.1em;
-    font-weight: bold;
-    cursor: pointer;
-    margin-top: 18px;
-    box-shadow: 0 2px 8px #900a;
-    transition: background 0.2s, transform 0.2s;
-}
-.register-form button:hover {
-    background: linear-gradient(90deg, #ff2222, #900);
-    transform: scale(1.04);
-}
-.success-msg {
+
+.register-form select option,
+.register-form .category-select option {
     background: #222;
-    color: #0f0;
-    border-left: 5px solid #ff2222;
-    padding: 12px 16px;
-    border-radius: 8px;
-    margin-bottom: 18px;
-    text-align: center;
+    color: #fff;
 }
-.animated-glow {
-    position: absolute;
-    top: -60px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 180px;
-    height: 180px;
-    background: radial-gradient(circle, #ff2222 0%, #900 60%, transparent 80%);
-    filter: blur(32px);
-    opacity: 0.7;
-    animation: floatGlow 3s ease-in-out infinite alternate;
-    z-index: 0;
-}
-@keyframes floatGlow {
-    0% { transform: translateX(-50%) translateY(0); opacity: 0.7; }
-    100% { transform: translateX(-50%) translateY(30px); opacity: 1; }
-}
-.register-content { position: relative; z-index: 1; }
 
 /* Style global pour Revieweo - Noir & Rouge */
 body {
@@ -563,3 +540,5 @@ a {
         font-size: 1.8rem;
     }
 }
+
+
