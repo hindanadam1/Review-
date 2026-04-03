@@ -173,12 +173,7 @@ body {
       <div class="featured-content">
         <img class="featured-title" src="img/f-t-1.png" alt="" />
         <p class="featured-desc">
-          ttttttttttttttttttttttttttttttttttttttt
-          ttttttttttttttttttttttttttttttttttttttttttttttt
-          ttttttttttttttttttttttttttttttttttttttttttttttttttttttt
-          ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt
-          tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt
-          ttttttttttttttttttttttttttt
+        Lorem ipsum dolor sit amet consectetur adipisicing elit. Blanditiis ipsum illum consequatur obcaecati similique ipsa non quidem. Reiciendis, cupiditate autem debitis laborum ullam expedita, totam odio enim minus est mollitia.
         </p>
       </div>
       <!-- lists movies -->

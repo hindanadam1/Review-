@@ -28,6 +28,88 @@
     background: rgba(255, 34, 34, 0.28);
 }
 
+.register-container {
+    background: rgba(20, 20, 20, 0.98);
+    border-radius: 20px;
+    box-shadow: 0 0 40px 5px #900;
+    padding: 40px 32px 32px 32px;
+    width: 100%;
+    max-width: 620px;
+    position: relative;
+    overflow: hidden;
+    margin: 40px auto;
+}
+
+.register-title {
+    font-size: 2.2em;
+    font-weight: bold;
+    color: #ff2222;
+    margin-bottom: 24px;
+    letter-spacing: 2px;
+    text-align: center;
+    position: relative;
+}
+
+.animated-glow {
+    position: absolute;
+    top: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 180px;
+    height: 180px;
+    background: radial-gradient(circle, #ff2222 0%, #900 60%, transparent 80%);
+    filter: blur(32px);
+    opacity: 0.7;
+    animation: floatGlow 3s ease-in-out infinite alternate;
+    z-index: 0;
+}
+
+.register-content {
+    position: relative;
+    z-index: 1;
+}
+
+.register-form input,
+.register-form textarea {
+    width: 100%;
+    padding: 12px 14px;
+    margin: 12px 0;
+    border: none;
+    border-radius: 8px;
+    background: #222;
+    color: #fff;
+    font-size: 1em;
+    transition: box-shadow 0.2s;
+    resize: none;
+    box-sizing: border-box;
+}
+
+.register-form input:focus,
+.register-form textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #ff2222;
+}
+
+.register-form button {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(90deg, #900, #ff2222);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 18px;
+    box-shadow: 0 2px 8px #900a;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.register-form button:hover {
+    background: linear-gradient(90deg, #ff2222, #900);
+    transform: scale(1.02);
+}
+
 .register-form select,
 .register-form .category-select {
     width: 100%;

@@ -2,6 +2,8 @@
 session_start();
 require_once '../config/db.php';
 
+// Cette page est privée : sans session, retour vers la page de connexion.
+
 $authService->requireLogin('../auth/login.php');
 
 $currentUser = $authService->currentUser();
@@ -462,5 +464,6 @@ document.querySelectorAll('.like-btn').forEach((button) => {
 
 </body>
 </html>
+
 
 

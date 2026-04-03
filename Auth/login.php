@@ -2,6 +2,7 @@
 session_start();
 require_once '../config/db.php';
 
+// Si l'utilisateur a d�j� une session active, on le renvoie vers son espace.
 if ($authService->isLoggedIn()) {
     header("Location: ../pages/dashboard.php");
     exit();
@@ -16,6 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($login === '' || $password === '') {
         $error = "Veuillez remplir tous les champs.";
     } else {
+        // La mthode login vrifie le mot de passe puis cre la session utilisateur.
         $user = $authService->login($login, $password);
 
         if ($user !== null) {
@@ -58,4 +60,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php require_once '../includes/footer.php'; ?>
 </body>
 </html>
-
